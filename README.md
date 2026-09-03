@@ -1,32 +1,67 @@
-# React + TypeScript + Vite
+# AI Teacher 🎓
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> An AI-powered virtual teacher that transforms educational content into personalized, interactive, and adaptive learning sessions with AI-generated video, voice, and avatar.
 
-Currently, two official plugins are available:
+## 📌 Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+AI Teacher is an intelligent educational system designed to provide a personalized teaching experience rather than simply answering questions like a conventional chatbot.
 
-## React Compiler
+The system can accept an uploaded educational resource such as a PDF, textbook, lecture notes, DOCX, PPTX, or research paper, or directly accept a topic from the student.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+It analyzes the learning material, creates a structured lesson, explains concepts according to the student's level and available time, asks questions, evaluates responses, detects misconceptions, and adapts the teaching strategy accordingly.
 
-## Expanding the Oxlint configuration
+The system can also deliver the lesson through an AI-generated teacher avatar with natural voice and subject-aware visual explanations.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+---
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+## 🎯 Problem
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Traditional digital learning platforms mainly rely on:
+
+- Pre-recorded lectures
+- Static educational content
+- Text-based AI assistants
+- Generic explanations
+
+These approaches often fail to adapt to the individual learner.
+
+AI Teacher aims to provide a teaching process closer to a real teacher:
+
+**Understand → Plan → Explain → Demonstrate → Question → Evaluate → Adapt → Continue**
+
+---
+
+## ✨ Key Features
+
+### 📚 Learning Material Understanding
+
+Supports educational material such as:
+
+- PDF
+- DOC/DOCX
+- PPT/PPTX
+- Lecture notes
+- Textbooks
+- Research papers
+- Course material
+
+The system extracts and processes relevant concepts, sections, definitions, and examples.
+
+### 🔎 Retrieval-Augmented Generation (RAG)
+
+Uploaded materials are processed using a RAG pipeline:
+
+```text
+Document
+   ↓
+Text Extraction
+   ↓
+Chunking
+   ↓
+Embeddings
+   ↓
+Vector Database
+   ↓
+Relevant Context Retrieval
+   ↓
+LLM
