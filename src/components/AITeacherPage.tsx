@@ -1,3 +1,4 @@
+import { buildTeacherResponse } from '../teacher/teacherEngine';
 import React, { useState, useEffect } from 'react';
 import { 
   Play, 
@@ -20,22 +21,23 @@ import { useApp } from '../context/AppContext';
 import confetti from 'canvas-confetti';
 
 export const AITeacherPage: React.FC = () => {
-  const { 
-    activeLesson, 
-    currentSlideIndex, 
-    setCurrentSlideIndex, 
-    isPlayingAudio, 
-    speakText, 
-    stopSpeech,
-    audioSpeed,
-    setAudioSpeed,
-    captionsEnabled,
-    selectedLanguage,
-    adaptiveModeActive,
-    setAdaptiveModeActive,
-    recordCheckpointResult,
-    setCurrentPage
-  } = useApp();
+  const {
+  activeLesson,
+  currentSlideIndex,
+  setCurrentSlideIndex,
+  isPlayingAudio,
+  speakText,
+  stopSpeech,
+  audioSpeed,
+  setAudioSpeed,
+  captionsEnabled,
+  selectedLanguage,
+  adaptiveModeActive,
+  setAdaptiveModeActive,
+  recordCheckpointResult,
+  setCurrentPage,
+  personalization
+} = useApp();
 
   const slides = activeLesson.slides;
   const currentSlide = slides[currentSlideIndex] || slides[0];
@@ -51,6 +53,14 @@ export const AITeacherPage: React.FC = () => {
   const [assistantMessages, setAssistantMessages] = useState<Array<{ role: 'assistant' | 'student'; text: string }>>([
     { role: 'assistant', text: 'Hi! I am here with you. Ask me to explain this slide in a simpler way.' },
   ]);
+  const [teacherResponse, setTeacherResponse] = useState<{
+  speech: string;
+  strategy: 'analogy' | 'step-by-step' | 'example' | 'clarify';
+  visualTitle: string;
+  visualItems: string[];
+  analogy?: string;
+  checkQuestion?: string;
+} | null>(null);
 
   // Auto-speak current narration text when slide changes
   useEffect(() => {
@@ -118,29 +128,47 @@ export const AITeacherPage: React.FC = () => {
   };
 
   const askAssistant = (question: string) => {
-    const trimmedQuestion = question.trim();
-    if (!trimmedQuestion || isAssistantThinking) return;
+  const trimmedQuestion = question.trim();
 
-    const lowerQuestion = trimmedQuestion.toLowerCase();
-    const response = lowerQuestion.includes('simple') || lowerQuestion.includes('easy')
-      ? `Here is a simpler way to see it: ${currentSlide.visualContent.analogyText || currentSlide.narrationText}`
-      : lowerQuestion.includes('example')
-        ? `A useful real-world connection is this: ${currentSlide.visualContent.analogyText || currentSlide.visualContent.items?.[0] || currentSlide.title}.`
-        : `Let us focus on ${currentSlide.title}. ${currentSlide.narrationText}`;
+  if (!trimmedQuestion || isAssistantThinking || !currentSlide) {
+    return;
+  }
+
+  setIsAssistantThinking(true);
+
+  setAssistantMessages(prev => [
+    ...prev.slice(-3),
+    {
+      role: 'student',
+      text: trimmedQuestion
+    }
+  ]);
+
+  setStudentQuestion('');
+
+  window.setTimeout(() => {
+    const response = buildTeacherResponse({
+      question: trimmedQuestion,
+      slide: currentSlide,
+      level: personalization.level,
+      language: selectedLanguage,
+    });
+
+    setTeacherResponse(response);
 
     setAssistantMessages(prev => [
       ...prev.slice(-3),
-      { role: 'student', text: trimmedQuestion },
+      {
+        role: 'assistant',
+        text: response.speech
+      }
     ]);
-    setStudentQuestion('');
-    setIsAssistantThinking(true);
 
-    window.setTimeout(() => {
-      setAssistantMessages(prev => [...prev.slice(-3), { role: 'assistant', text: response }]);
-      setIsAssistantThinking(false);
-      speakText(response);
-    }, 650);
-  };
+    setIsAssistantThinking(false);
+
+    speakText(response.speech);
+  }, 500);
+};
 
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto">
