@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Upload, 
-  Sparkles, 
-  Clock, 
-  Target, 
-  Globe, 
-  GraduationCap, 
+import {
+  Upload,
+  Sparkles,
+  Clock,
+  Target,
+  Globe,
+  GraduationCap,
   X,
   FileCheck,
   Search
@@ -18,7 +18,15 @@ export const LearnPage: React.FC = () => {
 
   const [inputMode, setInputMode] = useState<'topic' | 'file'>('topic');
   const [topicText, setTopicText] = useState('Quantum Computing & Qubit Mechanics');
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(null);
+  const [uploadedFile, setUploadedFile] =
+    useState<{
+      name: string;
+      size: string;
+      documentId?: string;
+    } | null>(null);
+
+  const [isUploading, setIsUploading] =
+    useState(false);
 
   const [level, setLevel] = useState<LearnerLevel>('Intermediate');
   const [language, setLanguage] = useState<Language>('English');
@@ -34,29 +42,164 @@ export const LearnPage: React.FC = () => {
     'Organic Chemistry Mechanisms',
   ];
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+
     const file = e.target.files?.[0];
-    if (file) {
+
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      const response = await fetch(
+        "http://localhost:4000/api/rag/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Upload failed"
+        );
+      }
+
       setUploadedFile({
         name: file.name,
-        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        size: `${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(2)} MB`,
+        documentId: data.documentId,
       });
-      setInputMode('file');
+
+      setInputMode("file");
+
+      console.log(
+        "✅ RAG document indexed:",
+        data.documentId
+      );
+
+    } catch (error) {
+
+      console.error(
+        "❌ RAG upload failed:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Document upload failed"
+      );
+
+    } finally {
+
+      setIsUploading(false);
+
     }
   };
 
-  const handleGenerate = (e: React.FormEvent) => {
-    e.preventDefault();
-    generateCustomLesson({
-      level,
-      language,
-      duration,
-      goal,
-      customTopic: inputMode === 'topic' ? topicText : undefined,
-      fileName: inputMode === 'file' ? uploadedFile?.name : undefined,
-    });
-  };
+  const handleGenerate = async (
+    e: React.FormEvent
+  ) => {
 
+    e.preventDefault();
+
+    // Normal topic lesson
+    if (inputMode === "topic") {
+
+      generateCustomLesson({
+        level,
+        language,
+        duration,
+        goal,
+        customTopic: topicText,
+      });
+
+      return;
+    }
+
+    // RAG document lesson
+    if (
+      inputMode === "file" &&
+      uploadedFile?.documentId
+    ) {
+
+      try {
+
+        const response = await fetch(
+          "http://localhost:4000/api/rag/lesson",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              documentId:
+                uploadedFile.documentId,
+
+              topic:
+                uploadedFile.name,
+
+              level,
+              language,
+              duration,
+              goal,
+            }),
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+            "Lesson generation failed"
+          );
+        }
+
+        console.log(
+          "🤖 RAG Lesson:",
+          data.lesson
+        );
+
+        // Temporary:
+        // display the generated lesson
+        // in your existing lesson UI
+        alert(
+          "RAG lesson generated successfully!"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "❌ RAG lesson error:",
+          error
+        );
+
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Could not generate lesson"
+        );
+      }
+    }
+  };
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16 relative">
       {/* Header */}
@@ -81,18 +224,16 @@ export const LearnPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setInputMode('topic')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                  inputMode === 'topic' ? 'bg-cyan-500 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={`px-3 py-1.5 rounded-lg font-medium transition-all ${inputMode === 'topic' ? 'bg-cyan-500 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                  }`}
               >
                 Enter Topic
               </button>
               <button
                 type="button"
                 onClick={() => setInputMode('file')}
-                className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                  inputMode === 'file' ? 'bg-cyan-500 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={`px-3 py-1.5 rounded-lg font-medium transition-all ${inputMode === 'file' ? 'bg-cyan-500 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                  }`}
               >
                 Upload PDF / Notes / PPT
               </button>
@@ -137,7 +278,23 @@ export const LearnPage: React.FC = () => {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
 
-              {uploadedFile ? (
+              {isUploading ? (
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto">
+                    <Sparkles className="w-6 h-6 text-cyan-400 animate-spin" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-bold text-slate-200">
+                      Processing your document...
+                    </p>
+
+                    <p className="text-xs text-cyan-400 mt-1">
+                      Extracting content and building your AI knowledge base
+                    </p>
+                  </div>
+                </div>
+              ) : uploadedFile ? (
                 <div className="flex items-center justify-center gap-3">
                   <FileCheck className="w-8 h-8 text-emerald-400" />
                   <div className="text-left">
@@ -182,11 +339,10 @@ export const LearnPage: React.FC = () => {
                   key={lvl}
                   type="button"
                   onClick={() => setLevel(lvl)}
-                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${
-                    level === lvl
+                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${level === lvl
                       ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md shadow-cyan-500/10'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   {lvl}
                 </button>
@@ -205,11 +361,10 @@ export const LearnPage: React.FC = () => {
                   key={lang}
                   type="button"
                   onClick={() => setLanguage(lang)}
-                  className={`p-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                    language === lang
+                  className={`p-2.5 rounded-xl border text-xs font-semibold transition-all ${language === lang
                       ? 'bg-violet-500/20 border-violet-400 text-violet-300 shadow-md shadow-violet-500/10'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   {lang}
                 </button>
@@ -228,11 +383,10 @@ export const LearnPage: React.FC = () => {
                   key={mins}
                   type="button"
                   onClick={() => setDuration(mins)}
-                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${
-                    duration === mins
+                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${duration === mins
                       ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   {mins} Mins
                 </button>
@@ -251,11 +405,10 @@ export const LearnPage: React.FC = () => {
                   key={g}
                   type="button"
                   onClick={() => setGoal(g)}
-                  className={`p-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                    goal === g
+                  className={`p-2.5 rounded-xl border text-xs font-semibold transition-all ${goal === g
                       ? 'bg-rose-500/20 border-rose-400 text-rose-300 shadow-md shadow-rose-500/10'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   {g}
                 </button>

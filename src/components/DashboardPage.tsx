@@ -1,13 +1,13 @@
 import React from 'react';
-import { 
-  Play, 
-  Sparkles, 
-  Award, 
-  Clock, 
-  TrendingUp, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ArrowRight, 
+import {
+  Play,
+  Sparkles,
+  Award,
+  Clock,
+  TrendingUp,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
   RotateCcw,
   Zap,
   BookOpen
@@ -16,8 +16,15 @@ import { useApp } from '../context/AppContext';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
-  const { userStats, activeLesson, setCurrentPage, remediateConcept } = useApp();
-
+  const {
+    userStats,
+    activeLesson,
+    setCurrentPage,
+    remediateConcept,
+    studyStreak,
+    studyDate,
+    studyTime,
+  } = useApp();
   const recommendedTopics = [
     { title: 'Neural Networks & Deep Learning', level: 'Beginner', duration: '15 mins', icon: '🧠', tag: 'High Priority' },
     { title: 'System Design & Distributed Caching', level: 'Intermediate', duration: '25 mins', icon: '⚡', tag: 'Trending' },
@@ -37,8 +44,22 @@ export const DashboardPage: React.FC = () => {
             Welcome back, <span className="gradient-text">{userStats.name}</span> 👋
           </h1>
           <p className="text-sm text-slate-300 max-w-xl">
-            You've maintained a <strong className="text-amber-400">{userStats.studyStreakDays}-day study streak</strong>. Your overall concept mastery is at <strong className="text-emerald-400">{userStats.overallMastery}%</strong>.
+            You've maintained a <strong className="text-amber-400">{studyStreak}-day study streak</strong>.
           </p>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <p className="text-[10px] text-slate-400">Today</p>
+              <p className="text-xs font-semibold text-cyan-300">
+                {studyDate}
+              </p>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <p className="text-[10px] text-slate-400">Current Time</p>
+              <p className="text-xs font-semibold text-violet-300">
+                {studyTime}
+              </p>
+            </div>
+          </div>
         </div>
 
         <button
@@ -56,7 +77,7 @@ export const DashboardPage: React.FC = () => {
           { label: 'Overall Mastery', value: `${userStats.overallMastery}%`, icon: Award, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
           { label: 'Completed Lessons', value: userStats.completedLessonsCount, icon: CheckCircle2, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
           { label: 'Total Study Time', value: `${userStats.totalStudyHours} hrs`, icon: Clock, color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
-          { label: 'Study Streak', value: `${userStats.studyStreakDays} Days`, icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+          { label: 'Study Streak', value: `${studyStreak} Days`, icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
         ].map((stat, idx) => {
           const Icon = stat.icon;
           return (
@@ -229,18 +250,18 @@ export const DashboardPage: React.FC = () => {
             <AreaChart data={userStats.weeklyActivity}>
               <defs>
                 <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#06B6D4" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
               <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} />
               <YAxis stroke="#94a3b8" fontSize={12} />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1E293B', borderColor: '#ffffff20', borderRadius: '12px', color: '#fff' }}
               />
               <Area type="monotone" dataKey="hours" stroke="#06B6D4" fillOpacity={1} fill="url(#colorHours)" />
