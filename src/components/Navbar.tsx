@@ -26,7 +26,7 @@ export const Navbar: React.FC = () => {
 
   const getPageTitle = () => {
     switch (currentPage) {
-      case 'landing': return 'AdaptiveAI Overview';
+      case 'landing': return 'Home';
       case 'dashboard': return 'Student Command Center';
       case 'learn': return 'AI Curriculum Personalizer';
       case 'planner': return 'Interactive Lesson Architecture';
@@ -38,7 +38,7 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="h-16 border-b border-white/10 bg-[#0B0F19]/80 backdrop-blur-md sticky top-0 z-20 px-4 md:px-8 flex items-center justify-between">
+    <header className="studio-nav h-16 border-b border-white/10 backdrop-blur-md sticky top-0 z-20 px-4 md:px-8 flex items-center justify-between">
       {/* Left Title & Mobile Menu */}
       <div className="flex items-center gap-4">
         <div className="md:hidden flex items-center gap-2">

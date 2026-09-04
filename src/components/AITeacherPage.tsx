@@ -11,6 +11,8 @@ import {
   MessageSquare, 
   Code, 
   HelpCircle,
+  MessageCircle,
+  Send,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -44,6 +46,11 @@ export const AITeacherPage: React.FC = () => {
   const [checkpointEvaluated, setCheckpointEvaluated] = useState<boolean>(false);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [isFollowUpMode, setIsFollowUpMode] = useState<boolean>(false);
+  const [studentQuestion, setStudentQuestion] = useState<string>('');
+  const [isAssistantThinking, setIsAssistantThinking] = useState<boolean>(false);
+  const [assistantMessages, setAssistantMessages] = useState<Array<{ role: 'assistant' | 'student'; text: string }>>([
+    { role: 'assistant', text: 'Hi! I am here with you. Ask me to explain this slide in a simpler way.' },
+  ]);
 
   // Auto-speak current narration text when slide changes
   useEffect(() => {
@@ -108,6 +115,31 @@ export const AITeacherPage: React.FC = () => {
     setIsFollowUpMode(true);
     setSelectedOption(null);
     setCheckpointEvaluated(false);
+  };
+
+  const askAssistant = (question: string) => {
+    const trimmedQuestion = question.trim();
+    if (!trimmedQuestion || isAssistantThinking) return;
+
+    const lowerQuestion = trimmedQuestion.toLowerCase();
+    const response = lowerQuestion.includes('simple') || lowerQuestion.includes('easy')
+      ? `Here is a simpler way to see it: ${currentSlide.visualContent.analogyText || currentSlide.narrationText}`
+      : lowerQuestion.includes('example')
+        ? `A useful real-world connection is this: ${currentSlide.visualContent.analogyText || currentSlide.visualContent.items?.[0] || currentSlide.title}.`
+        : `Let us focus on ${currentSlide.title}. ${currentSlide.narrationText}`;
+
+    setAssistantMessages(prev => [
+      ...prev.slice(-3),
+      { role: 'student', text: trimmedQuestion },
+    ]);
+    setStudentQuestion('');
+    setIsAssistantThinking(true);
+
+    window.setTimeout(() => {
+      setAssistantMessages(prev => [...prev.slice(-3), { role: 'assistant', text: response }]);
+      setIsAssistantThinking(false);
+      speakText(response);
+    }, 650);
   };
 
   return (
@@ -203,6 +235,17 @@ export const AITeacherPage: React.FC = () => {
                 ))}
               </div>
 
+              {/* Conversational Avatar Message */}
+              <div className="mx-auto max-w-sm rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-left shadow-inner">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>{isAssistantThinking ? 'Thinking...' : isPlayingAudio ? 'Teaching live' : 'Your AI teaching assistant'}</span>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-200">
+                  {assistantMessages[assistantMessages.length - 1]?.text}
+                </p>
+              </div>
+
               {/* Voice Controls Bar */}
               <div className="pt-2 flex items-center justify-center gap-3">
                 <button
@@ -229,6 +272,53 @@ export const AITeacherPage: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Ask the Avatar */}
+          <div className="p-4 rounded-2xl glass-card border border-cyan-500/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-white flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-cyan-400" /> Ask your teaching assistant
+              </p>
+              <span className="text-[10px] text-slate-400">Replies with voice</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {['Explain simply', 'Give me an example'].map(prompt => (
+                <button
+                  key={prompt}
+                  onClick={() => askAssistant(prompt)}
+                  disabled={isAssistantThinking}
+                  className="rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-cyan-400/50 hover:text-cyan-300 disabled:opacity-50"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            <form
+              onSubmit={event => {
+                event.preventDefault();
+                askAssistant(studentQuestion);
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                value={studentQuestion}
+                onChange={event => setStudentQuestion(event.target.value)}
+                placeholder="Ask about this slide..."
+                aria-label="Ask the AI teaching assistant"
+                className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!studentQuestion.trim() || isAssistantThinking}
+                aria-label="Send question"
+                className="rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 p-2.5 text-white shadow-lg shadow-cyan-500/20 disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
           </div>
 
           {/* Interactive Checkpoint Launcher Trigger (If slide has checkpoint) */}

@@ -18,7 +18,7 @@ export const Sidebar: React.FC = () => {
   const { currentPage, setCurrentPage, userStats, activeLesson } = useApp();
 
   const navItems: { id: PageType; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
-    { id: 'landing', label: 'Landing Page', icon: Home },
+    { id: 'landing', label: 'Home', icon: Home },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'learn', label: 'Create Lesson', icon: Sparkles, badge: 'AI Generator' },
     { id: 'planner', label: 'Lesson Planner', icon: BookOpenCheck },
@@ -28,7 +28,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-[#0B0F19]/90 border-r border-white/10 flex flex-col justify-between hidden md:flex shrink-0 min-h-screen sticky top-0 backdrop-blur-xl z-30">
+    <aside className="studio-sidebar w-64 border-r border-white/10 flex flex-col justify-between hidden md:flex shrink-0 min-h-screen sticky top-0 backdrop-blur-xl z-30">
       <div>
         {/* Brand Header */}
         <div className="p-6 flex items-center gap-3 border-b border-white/5">

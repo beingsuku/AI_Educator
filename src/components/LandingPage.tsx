@@ -106,7 +106,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="space-y-20 pb-20">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-16 px-4 rounded-3xl bg-gradient-to-b from-cyan-950/30 via-[#0B0F19] to-[#0B0F19] border border-cyan-500/20 cyber-grid">
+      <section className="landing-hero relative overflow-hidden pt-12 pb-16 px-4 rounded-3xl border cyber-grid">
         {/* Glow Effects */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/2 right-10 w-72 h-72 bg-violet-500/15 rounded-full blur-[100px] pointer-events-none" />
